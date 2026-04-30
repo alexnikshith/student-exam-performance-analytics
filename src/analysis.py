@@ -93,11 +93,13 @@ def calculate_student_metrics(df):
     
     # Calculate Grade
     def get_grade(percentage):
-        if percentage >= 90: return 'A+'
-        elif percentage >= 80: return 'A'
-        elif percentage >= 70: return 'B'
-        elif percentage >= 60: return 'C'
-        elif percentage >= 50: return 'D'
+        if percentage >= 93: return 'O'
+        elif percentage >= 87: return 'A+'
+        elif percentage >= 79: return 'A'
+        elif percentage >= 70: return 'B+'
+        elif percentage >= 61: return 'B'
+        elif percentage >= 51: return 'C'
+        elif percentage >= 40: return 'P'
         else: return 'F'
         
     df['Grade'] = df['Percentage'].apply(get_grade)
@@ -114,6 +116,7 @@ def calculate_student_metrics(df):
     # Remarks
     def get_remarks(row):
         if row['Status'] == 'Fail': return 'Needs significant improvement'
+        elif row['Grade'] == 'O': return 'Outstanding performance'
         elif row['Grade'] == 'A+': return 'Excellent performance'
         elif row['Grade'] == 'A': return 'Very Good'
         elif row['Attendance_Percentage'] < 75: return 'Improve attendance'
