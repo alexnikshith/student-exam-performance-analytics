@@ -171,15 +171,26 @@ async def analyze_file(file: UploadFile = File(...)):
 @app.post("/api/analyze-sample")
 async def analyze_sample():
     try:
-        # For Vercel, paths can be tricky. We assume data is in the same repo.
-        path = "data/student_marks.csv"
-        if not os.path.exists(path):
-            raise HTTPException(status_code=404, detail="Sample dataset not found")
+        # Try a few common paths for Vercel's execution environment
+        paths = [
+            "data/student_marks.csv",
+            "../data/student_marks.csv",
+            "/var/task/data/student_marks.csv"
+        ]
+        path = None
+        for p in paths:
+            if os.path.exists(p):
+                path = p
+                break
+        
+        if not path:
+            raise HTTPException(status_code=404, detail="Sample dataset not found on Vercel disk.")
+            
         df = pd.read_csv(path)
         result = process_data_logic(df)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Sample error: {str(e)}")
 
 @app.get("/api/health")
 async def health():

@@ -56,7 +56,9 @@ function App() {
         setSelectedSubject(Object.keys(res.data.insights.subject_averages)[0]);
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to process file');
+      console.error(err);
+      const detail = err.response?.data?.detail || err.response?.data?.error || err.message;
+      setError(typeof detail === 'string' ? detail : JSON.stringify(detail));
     } finally {
       setLoading(false);
     }
