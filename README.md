@@ -1,6 +1,6 @@
 # 🎓 EduAnalytics: Student Performance Analysis Platform
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://student-exam-performance-analytics.vercel.app)
+[![Live site](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://student-exam-performance-analytics.vercel.app)
 
 **EduAnalytics** is a high-fidelity, professional SaaS dashboard designed for educators to transform raw student data into actionable insights. Built with a matte-maroon institutional aesthetic, it provides both macroscopic class-level analytics and granular individual student performance reports.
 
