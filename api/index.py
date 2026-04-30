@@ -72,11 +72,13 @@ def process_data_logic(df):
         df['Attendance_Percentage'] = 100.0
 
     def get_grade(p):
-        if p >= 90: return 'A+'
-        elif p >= 80: return 'A'
-        elif p >= 70: return 'B'
-        elif p >= 60: return 'C'
-        elif p >= 50: return 'D'
+        if p >= 93: return 'O'
+        elif p >= 87: return 'A+'
+        elif p >= 79: return 'A'
+        elif p >= 70: return 'B+'
+        elif p >= 61: return 'B'
+        elif p >= 51: return 'C'
+        elif p >= 40: return 'P'
         else: return 'F'
 
     df['Grade'] = df['Percentage'].apply(get_grade)
@@ -89,6 +91,7 @@ def process_data_logic(df):
     # Remarks
     def get_remarks(row):
         if row['Status'] == 'Fail': return 'Needs significant improvement'
+        elif row['Grade'] == 'O': return 'Outstanding performance'
         elif row['Grade'] == 'A+': return 'Excellent performance'
         elif row['Grade'] == 'A': return 'Very Good'
         elif row['Attendance_Percentage'] < 75: return 'Improve attendance'
