@@ -27,8 +27,12 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const ITEMS_PER_PAGE = 25;
   const fileInputRef = useRef(null);
+  const ITEMS_PER_PAGE = 25;
+
+  useEffect(() => {
+    document.title = "EduAnalytics | Student Performance Portal";
+  }, []);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
