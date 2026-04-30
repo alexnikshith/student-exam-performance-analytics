@@ -30,18 +30,16 @@ function App() {
   const ITEMS_PER_PAGE = 25;
   const fileInputRef = useRef(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || '';
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
     formData.append('file', file);
-    await processRequest(`${API_BASE}/api/analyze`, formData);
+    await processRequest('/api/analyze', formData);
   };
 
   const handleUseSample = async () => {
-    await processRequest(`${API_BASE}/api/analyze-sample`);
+    await processRequest('/api/analyze-sample');
   };
 
   const processRequest = async (url, payload = null) => {
