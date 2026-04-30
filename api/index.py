@@ -101,24 +101,40 @@ def process_data_logic(df):
     subject_avgs = {}
     for sub in subjects:
         col = f'{sub}_Total'
-        max_score_in_col = df[col].max()
-        max_basis = max_score_in_col if max_score_in_col > 100 else 100
-        normalized_avg = (df[col].mean() / max_basis) * 100
-        subject_avgs[sub] = normalized_avg
+        # Safely convert to numeric and drop NaNs for max/mean calculation
+        numeric_series = pd.to_numeric(df[col], errors='coerce').dropna()
+        if numeric_series.empty:
+            subject_avgs[sub] = 0
+            continue
+            
+        max_score_in_col = numeric_series.max()
+        max_basis = float(max_score_in_col) if max_score_in_col > 100 else 100.0
+        normalized_avg = (numeric_series.mean() / max_basis) * 100
+        subject_avgs[sub] = float(normalized_avg)
 
     insights['subject_averages'] = subject_avgs
-    insights['strongest_subject'] = max(subject_avgs, key=subject_avgs.get)
-    insights['weakest_subject'] = min(subject_avgs, key=subject_avgs.get)
-    insights['overall_average'] = df['Percentage'].mean()
+    if subject_avgs:
+        insights['strongest_subject'] = max(subject_avgs, key=subject_avgs.get)
+        insights['weakest_subject'] = min(subject_avgs, key=subject_avgs.get)
+    else:
+        insights['strongest_subject'] = "N/A"
+        insights['weakest_subject'] = "N/A"
+
+    insights['overall_average'] = float(df['Percentage'].mean()) if not df.empty else 0
     insights['total_students'] = len(df)
     
     pass_count = len(df[df['Status'] == 'Pass'])
-    insights['pass_percentage'] = (pass_count / len(df)) * 100
+    insights['pass_percentage'] = float((pass_count / len(df)) * 100) if len(df) > 0 else 0
     
-    top_row = df.iloc[0]
-    insights['top_student'] = top_row['Student_Name']
-    insights['top_marks'] = top_row['Total_Marks']
-    insights['top_5'] = df.head(5)[['Student_Name', 'Percentage', 'Rank']].to_dict('records')
+    if not df.empty:
+        top_row = df.iloc[0]
+        insights['top_student'] = str(top_row['Student_Name'])
+        insights['top_marks'] = float(top_row['Total_Marks'])
+        insights['top_5'] = df.head(5)[['Student_Name', 'Percentage', 'Rank']].to_dict('records')
+    else:
+        insights['top_student'] = "N/A"
+        insights['top_marks'] = 0
+        insights['top_5'] = []
     
     insights['at_risk_students'] = df[df['Status'] == 'Fail'][['Student_Name', 'Percentage', 'Attendance_Percentage']].to_dict('records')
     insights['low_attendance'] = df[df['Attendance_Percentage'] < 75][['Student_Name', 'Attendance_Percentage']].to_dict('records')
@@ -126,16 +142,17 @@ def process_data_logic(df):
     high_att_avg = df[df['Attendance_Percentage'] >= 85]['Percentage'].mean()
     low_att_avg = df[df['Attendance_Percentage'] < 85]['Percentage'].mean()
     insights['attendance_correlation'] = {
-        'high_att_avg': high_att_avg if pd.notna(high_att_avg) else 0,
-        'low_att_avg': low_att_avg if pd.notna(low_att_avg) else 0
+        'high_att_avg': float(high_att_avg) if pd.notna(high_att_avg) else 0,
+        'low_att_avg': float(low_att_avg) if pd.notna(low_att_avg) else 0
     }
 
-    statements = [
-        f"🏆 The strongest subject overall is **{insights['strongest_subject']}** with an average of **{subject_avgs[insights['strongest_subject']]:.1f} marks**.",
-        f"⚠️ Students are struggling the most in **{insights['weakest_subject']}** (Average: {subject_avgs[insights['weakest_subject']]:.1f} marks).",
-        f"📊 The overall class average percentage is **{insights['overall_average']:.1f}%**.",
-        f"✅ The overall pass rate is **{insights['pass_percentage']:.1f}%**."
-    ]
+    statements = []
+    if subject_avgs:
+        statements.append(f"🏆 The strongest subject overall is **{insights['strongest_subject']}** with an average of **{subject_avgs[insights['strongest_subject']]:.1f} marks**.")
+        statements.append(f"⚠️ Students are struggling the most in **{insights['weakest_subject']}** (Average: {subject_avgs[insights['weakest_subject']]:.1f} marks).")
+    
+    statements.append(f"📊 The overall class average percentage is **{insights['overall_average']:.1f}%**.")
+    statements.append(f"✅ The overall pass rate is **{insights['pass_percentage']:.1f}%**.")
 
     att_diff = (high_att_avg or 0) - (low_att_avg or 0)
     if att_diff > 0 and pd.notna(high_att_avg) and pd.notna(low_att_avg):
