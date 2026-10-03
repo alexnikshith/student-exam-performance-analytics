@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { UploadCloud, Database, BarChart2, BrainCircuit, PlayCircle, GraduationCap, Trophy, Users, TrendingUp, CheckCircle, Home, Search, Download, User, ChevronLeft, ChevronRight, BookOpen, Printer } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import LandingPage from './components/LandingPage';
 
 const PrintSafeChart = ({ children, isPrinting }) => {
   if (isPrinting) {
@@ -20,6 +21,7 @@ function App() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('data');
   const [hasStarted, setHasStarted] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isPrintingStudent, setIsPrintingStudent] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,6 +55,8 @@ function App() {
     try {
       const res = payload ? await axios.post(url, payload) : await axios.post(url);
       setData(res.data);
+      setHasStarted(true);
+      setShowLanding(false);
       if (res.data.df.length > 0) {
         setSelectedStudent(res.data.df[0].Student_Name);
       }
@@ -214,72 +218,74 @@ function App() {
   const COLORS = ['#9b1c31', '#d94b58', '#4285f4', '#fbbc05', '#34a853', '#8e44ad'];
   const STATUS_COLORS = ['#34a853', '#d93025']; 
 
+  if (showLanding || !data) {
+    return (
+      <div className="relative">
+        {data && (
+          <div className="sticky top-0 z-50 bg-[#9b1c31] text-white py-2 px-6 flex justify-between items-center text-sm font-medium shadow-md">
+            <span className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-emerald-400" />
+              Dataset active ({data.insights.total_students} students analyzed)
+            </span>
+            <button 
+              onClick={() => setShowLanding(false)}
+              className="px-4 py-1 bg-white text-[#9b1c31] hover:bg-rose-50 rounded-lg text-xs font-bold transition-all shadow-sm"
+            >
+              Return to Dashboard →
+            </button>
+          </div>
+        )}
+        <LandingPage 
+          onStartUpload={() => setHasStarted(true)}
+          onUseSample={handleUseSample}
+          onLaunchPortal={() => setShowLanding(false)}
+          fileInputRef={fileInputRef}
+          handleFileUpload={handleFileUpload}
+          loading={loading}
+          error={error}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-[#f4f6f9] font-sans ${isPrinting ? 'print:bg-white print:p-0' : ''}`}>
       
-      {/* HEADER - AMRITA STYLE */}
+      {/* HEADER - AMRITA / INSTITUTIONAL STYLE */}
       <header className="bg-[#9b1c31] text-white py-4 px-6 shadow-md print:hidden flex justify-between items-center">
-        <h1 className="text-xl font-normal tracking-wide flex items-center">
-          <GraduationCap className="mr-3" />
+        <h1 
+          className="text-xl font-semibold tracking-wide flex items-center cursor-pointer hover:opacity-90 transition-opacity" 
+          onClick={() => setShowLanding(true)}
+        >
+          <GraduationCap className="mr-3 w-6 h-6" />
           EduAnalytics
+          <span className="ml-2 text-xs bg-white/20 text-white font-medium px-2 py-0.5 rounded-full">Dashboard</span>
         </h1>
         {data && (
-          <button 
-            onClick={() => { 
-              localStorage.removeItem('eduAnalytics_state');
-              setData(null); 
-              setHasStarted(true); 
-              setActiveTab('data'); 
-            }} 
-            className="flex items-center px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded text-sm font-medium transition-colors"
-          >
-            <Home className="w-4 h-4 mr-2" /> Reset & New Analysis
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowLanding(true)} 
+              className="flex items-center px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Home className="w-4 h-4 mr-2" /> Landing Page
+            </button>
+            <button 
+              onClick={() => { 
+                localStorage.removeItem('eduAnalytics_state');
+                setData(null); 
+                setShowLanding(true); 
+                setActiveTab('data'); 
+              }} 
+              className="flex items-center px-3.5 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Home className="w-4 h-4 mr-2" /> Reset & New Analysis
+            </button>
+          </div>
         )}
       </header>
 
       <div className={`p-6 md:p-8 max-w-7xl mx-auto ${isPrinting ? 'print:p-0 print:max-w-none print:w-full' : ''}`}>
         
-        {/* LANDING PAGE */}
-        {!hasStarted && !data && (
-          <div className="flex flex-col items-center justify-center py-20 animate-fade-in-up">
-            <div className="bg-white p-10 rounded-lg shadow-sm border border-gray-100 max-w-2xl w-full text-center">
-              <GraduationCap className="w-16 h-16 text-[#9b1c31] mx-auto mb-6" />
-              <h2 className="text-3xl font-light text-gray-800 mb-4">Welcome to the Analytics Portal</h2>
-              <p className="text-gray-500 mb-10">Upload student records to generate detailed performance reports and visualizations.</p>
-              
-              <button onClick={() => setHasStarted(true)} className="px-8 py-3 bg-[#9b1c31] hover:bg-[#7a1526] text-white rounded font-medium shadow-md transition-colors">
-                Get Started
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* UPLOAD SECTION */}
-        {hasStarted && !data && (
-          <div className="flex flex-col items-center justify-center py-10 animate-fade-in-up max-w-2xl mx-auto">
-            <div onClick={() => fileInputRef.current?.click()} className="w-full bg-white border-2 border-dashed border-gray-300 rounded-lg p-16 flex flex-col items-center justify-center cursor-pointer hover:border-[#9b1c31] hover:bg-gray-50 transition-colors shadow-sm">
-              <UploadCloud className="w-12 h-12 text-[#9b1c31] mb-4" />
-              <h2 className="text-xl font-medium text-gray-700 mb-2">Upload Student Data</h2>
-              <p className="text-gray-500 text-sm">Select a CSV file to begin analysis</p>
-              <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            </div>
-            
-            <div className="mt-8 flex items-center w-full">
-              <div className="h-px bg-gray-300 flex-1"></div>
-              <span className="text-gray-400 font-medium px-4 text-sm">OR</span>
-              <div className="h-px bg-gray-300 flex-1"></div>
-            </div>
-            
-            <button onClick={handleUseSample} className="mt-8 flex items-center px-6 py-2 bg-white text-[#9b1c31] border border-[#9b1c31] rounded font-medium hover:bg-gray-50 transition-colors">
-              <PlayCircle className="mr-2 w-5 h-5" /> Use Demo Data
-            </button>
-            
-            {loading && <p className="mt-6 text-[#9b1c31] font-medium animate-pulse">Processing file...</p>}
-            {error && <p className="mt-6 text-red-500 font-medium">{error}</p>}
-          </div>
-        )}
-
         {/* DASHBOARD */}
         {data && (
           <div className={`animate-fade-in-up ${isPrinting ? 'print:block' : 'space-y-6'}`}>
